@@ -7,7 +7,14 @@ const authRoute = require("./routes/auth");
 const productRoute = require("./routes/product");
 const cartRoute = require("./routes/cart");
 const orderRoute = require("./routes/order");
-const upload = require("./routes/upload");
+var fileUpload = require("express-fileupload");
+global.appRoot = __dirname;
+
+app.use(
+    fileUpload({
+        limits: { fileSize: 50 * 1024 * 1024 }
+    })
+);
 
 dotenv.config();
 
@@ -19,10 +26,9 @@ mongoose.connect('mongodb://localhost/EcommerceAPI',
         console.log(err);
     })
 
-
-app.use("/api/products", upload.single("img"), productRoute);
-
+app.use(express.urlencoded({ extended: false }))
 app.use(express.json());
+app.use("/api/products", productRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/carts", cartRoute);

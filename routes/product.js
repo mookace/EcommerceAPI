@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const mongoose = require("mongoose");
 const {
     verifyToken,
     verifyTokenAndAuthorization,
@@ -8,8 +9,38 @@ const {
 const router = require("express").Router();
 
 //Create Product
-
 router.post("/", verifyTokenAndAdmin, async (req, res) => {
+
+    // for image validation
+    if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).json({ message: "Must Attach a file" });
+    }
+    let files = req.files;
+    console.log(files);
+
+    if (files.img.truncated === true) {
+        return res.status(400).json({
+            message: "File too large"
+        });
+    }
+    if (
+        !(
+            files.img.mimetype == "image/png" ||
+            files.img.mimetype == "image/jpeg"
+        )
+    ) {
+        return res.status(400).json({
+            message: "Only png and jpeg is allowed"
+        });
+    }
+
+    files.img.name = `${Date.now()}-${files.img.name}`;
+    let filepath = `${appRoot}/uploads/${files.img.name}`;
+    console.log(filepath);
+    files.img.mv(filepath, function (err) {
+        if (err) return res.status(500).send(err);
+        console.log("File uploaded!");
+    });
     let newProduct = new Product({
         name: req.body.name,
         description: req.body.description,
@@ -19,30 +50,58 @@ router.post("/", verifyTokenAndAdmin, async (req, res) => {
         size: req.body.size,
         stock: req.body.stock,
         material: req.body.material,
-
-
+        imageUrl: files.img.name
     })
-    if (req.file) {
-        newProduct.img = req.file.path
-    }
-
     try {
         const savedProduct = await newProduct.save();
         res.status(200).json(savedProduct);
-
     } catch (err) {
-        res.status(500).json(err);
+        res.status(500).json({
+            message: err.message
+        });
     }
-})
+});
 
 //UPDATE Products
 router.put("/:id", verifyTokenAndAdmin, async (req, res) => {
+    // for image validation
+    if (!req.files || Object.keys(req.files).length === 0) {
+        return res.status(400).json({ message: "Must Attach a file" });
+    }
+    let files = req.files;
+    console.log(files);
+
+    if (files.img.truncated === true) {
+        return res.status(400).json({
+            message: "File too large"
+        });
+    }
+    if (
+        !(
+            files.img.mimetype == "image/png" ||
+            files.img.mimetype == "image/jpeg"
+        )
+    ) {
+        return res.status(400).json({
+            message: "Only png and jpeg is allowed"
+        });
+    }
+
+    files.img.name = `${Date.now()}-${files.img.name}`;
+    let filepath = `${appRoot}/uploads/${files.img.name}`;
+    console.log(filepath);
+    files.img.mv(filepath, function (err) {
+        if (err) return res.status(500).send(err);
+        console.log("File uploaded!");
+    });
 
     try {
         const updatedProduct = await Product.findByIdAndUpdate(
             req.params.id,
             {
                 $set: req.body,
+                imageUrl: files.img.name
+
             },
             { new: true }
         );
@@ -77,7 +136,7 @@ router.get("/find/:id", async (req, res) => {
         res.status(500).json(err);
     }
 });
-//Get All Users
+//Get All
 
 router.get("/", async (req, res) => {
     const qNew = req.query.new;
