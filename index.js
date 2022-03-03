@@ -18,8 +18,7 @@ app.use(
 
 dotenv.config();
 
-mongoose.connect('mongodb://localhost/EcommerceAPI',
-    { useNewurlparser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://admin:admin@cluster0.fivww.mongodb.net/Ecommerce?retryWrites=true&w=majority')
     .then(() => {
         console.log('database connected');
     }).catch(err => {
